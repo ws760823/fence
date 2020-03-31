@@ -113,7 +113,10 @@ app.use(webpackMiddleware(webpack(webpackConfig))),
         let targetPath = null;
         if (pathname === '/post') {
             const body = await getRequestBody(req, res);
-            console.log(body);
+            // console.log(body);
+            //收到来自鹰眼推送的电子围栏告警信息，转发至主服务器
+            
+            
             res.statusCode = 200;
             
             ctx.set('SignId' , 'baidu_yingyan')
