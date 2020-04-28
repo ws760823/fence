@@ -10,6 +10,7 @@ const app = new Koa();
 var webpack = require('webpack');
 var webpackMiddleware = require("koa-webpack-dev-middleware");
 var webpackConfig = require('./webpack.config.js');
+var request = require('request-promise')
 
 const contentType = require('content-type');
 const iconv = require('iconv-lite');
@@ -41,6 +42,7 @@ async function transformEncode(buffer, encode) {
             break;
         default:
             resultBuf = buffer;
+            console.log(encode)
             break;
     }
     return resultBuf;
@@ -103,6 +105,65 @@ function getRequestBody(req, res) {
     }).catch(err => { throw err; })
 }
 
+async function fence_push(fenceinfo) {
+   
+    
+    
+    
+    var options = { method: 'POST',
+    url: 'http://47.92.24.232:1201/op/fenceinfo',
+    headers: 
+     { 'cache-control': 'no-cache',
+    //   Connection: 'keep-alive',
+    //   'Content-Length': '868',
+       'Accept-Encoding': 'gzip, deflate',
+    //   Host: '47.92.24.232:1209',
+    //   'Postman-Token': 'ffa07874-df13-4c4f-b744-e15d106de93f,a5ce0f54-b611-4bfc-ab23-fe4b3afb036d',
+    //   'Cache-Control': 'no-cache',
+    //   Accept: '*/*',
+    //   'User-Agent': 'PostmanRuntime/7.20.1',
+       'Content-Type': 'application/json',
+    //   SignId: 'baidu_yingyan' 
+    },
+    body: fenceinfo ,
+    json: true };
+
+    try {
+  //     console.log('before')
+        let parsedBody = await request(options)
+  //     console.log(parsedBody)
+  //     console.log('after')
+        console.log(JSON.stringify(parsedBody))
+        // G.logger.debug(JSON.stringify(parsedBody))
+       // let bd = JSON.parse(parsedBody)
+       // return G.jsResponse(G.STCODES.SUCCESS, 'success.', {bdSt: bd.status, bdMessage: bd.message})
+    } catch (err) {
+       console.log(err.message)
+        // G.logger.error(err.message)
+      //  return G.jsResponse(G.STCODES.EXCEPTION, err.message)
+    }
+  
+}
+
+
+function parseFenceInfo(data){
+  
+ let fenceinfo = [] 
+  for (i=0;i<data.content.length;i++){
+    let fence_alert = new Object()
+    fence_alert.fence_id = data.content[i].fence_id
+    fence_alert.monitored_person = data.content[i].monitored_person
+    fence_alert.fence_name = data.content[i].fence_name
+    fence_alert.action = data.content[i].action
+    fence_alert.alarm_point = data.content[i].alarm_point
+    fence_alert.pre_point = data.content[i].pre_point
+    fenceinfo.push(fence_alert)
+  }
+  
+  return fenceinfo
+}
+
+
 app.use(webpackMiddleware(webpack(webpackConfig))),
 
     app.use(async (ctx) => {
@@ -113,9 +174,13 @@ app.use(webpackMiddleware(webpack(webpackConfig))),
         let targetPath = null;
         if (pathname === '/post') {
             const body = await getRequestBody(req, res);
-            // console.log(body);
+             console.log(body);
             //收到来自鹰眼推送的电子围栏告警信息，转发至主服务器
-            
+            let fenceinfo = parseFenceInfo(body)
+            //console.log(body)
+           // fence_push(body)
+            //console.log(fenceinfo)
+            fence_push(fenceinfo)
             
             res.statusCode = 200;
             
